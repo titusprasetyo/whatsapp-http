@@ -110,7 +110,7 @@ func main() {
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/logs", logsHandler)
 	http.HandleFunc("/qr", qrHandler)
-	addr := getEnv("ADDR", ":8080")
+	addr := getEnv("ADDR", ":80")
 	log.Printf("HTTP server listening on %s", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("http server error: %v", err)
@@ -351,7 +351,7 @@ func initClient(ctx context.Context) {
                 </div>
                 <p style="margin-top: 10px;">Or <a href="https://wa.me/%s?text=%s" target="_blank" style="color: #25D366; text-decoration: none; font-weight: bold;">click here</a> to open WhatsApp.</p>
             </div>`,
-							template.HTMLEscapeString(generateQRCode(evt.Code)),
+					template.HTMLEscapeString(generateQRCode(evt.Code)),
 					evt.Code,
 					"I'm trying to link my device")
 				qrCodeLock.Unlock()
