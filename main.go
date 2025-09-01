@@ -81,20 +81,27 @@ func reconnectAfterLogout() {
 }
 
 func main() {
+	// This will only run when not building for Vercel
+	if os.Getenv("VERCEL") == "" {
+		runLocalServer()
+	}
+}
+
+func runLocalServer() {
+	// Initialize context
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Graceful shutdown
+	// Handle graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-		<-ch
-		log.Println("shutting down...")
-		cancel()
-		if client != nil {
+		<-sigChan
+		log.Println("Shutting down...")
+		if client != nil && client.IsConnected() {
 			client.Disconnect()
 		}
-
+		cancel()
 		os.Exit(0)
 	}()
 
@@ -110,7 +117,7 @@ func main() {
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/logs", logsHandler)
 	http.HandleFunc("/qr", qrHandler)
-	addr := getEnv("ADDR", ":80")
+	addr := getEnv("ADDR", ":8080")
 	log.Printf("HTTP server listening on %s", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("http server error: %v", err)
