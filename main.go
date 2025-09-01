@@ -89,9 +89,9 @@ func reconnectAfterLogout() {
 
 func main() {
 	// This will only run when not building for Vercel
-	if os.Getenv("VERCEL") == "" {
-		runLocalServer()
-	}
+	// if os.Getenv("VERCEL") == "" {
+	runLocalServer()
+	// }
 }
 
 func runLocalServer() {
@@ -291,7 +291,6 @@ func logsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write(logBuffer.buf.Bytes())
 }
-
 
 func init() {
 	// Initialize log buffer with current time
