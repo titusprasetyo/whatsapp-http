@@ -19,6 +19,7 @@ import (
 	"time"
 
 	qrterminal "github.com/mdp/qrterminal/v3"
+
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -26,8 +27,6 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"google.golang.org/protobuf/proto"
-
-	// SQLite driver without CGO
 	_ "modernc.org/sqlite"
 )
 
@@ -59,6 +58,14 @@ var (
 	qrCode     string
 	qrCodeLock sync.Mutex
 )
+
+// qrHandler handles the /qr endpoint
+func qrHandler(w http.ResponseWriter, r *http.Request) {
+	qrCodeLock.Lock()
+	defer qrCodeLock.Unlock()
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(qrCode))
+}
 
 func reconnectAfterLogout() {
 	for attempt := 1; attempt <= 5; attempt++ {
@@ -285,20 +292,19 @@ func logsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(logBuffer.buf.Bytes())
 }
 
-func qrHandler(w http.ResponseWriter, r *http.Request) {
-	qrCodeLock.Lock()
-	defer qrCodeLock.Unlock()
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(qrCode))
-}
 
 func init() {
 	// Initialize log buffer with current time
 	logBuffer.Lock()
 	logBuffer.buf.WriteString(fmt.Sprintf("[%s] WhatsApp HTTP service starting...\n", time.Now().Format("2006-01-02 15:04:05")))
 	logBuffer.Unlock()
+
+	// Initialize WhatsApp client
+	ctx := context.Background()
+	initClient(ctx)
 }
 
+// initClient initializes the WhatsApp client
 func initClient(ctx context.Context) {
 	dsn := getEnv("WHATSAPP_SQLITE_DSN", "file:whatsmeow.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)")
 	logger := waLog.Stdout("whatsmeow", "INFO", true)
@@ -356,7 +362,12 @@ func initClient(ctx context.Context) {
                 <div style="background: white; padding: 15px; display: inline-block; border: 1px solid #ddd; border-radius: 4px;">
                     <pre style="margin: 0; line-height: 1.2;">%s</pre>
                 </div>
-                <p style="margin-top: 10px;">Or <a href="https://wa.me/%s?text=%s" target="_blank" style="color: #25D366; text-decoration: none; font-weight: bold;">click here</a> to open WhatsApp.</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    Or <a href="https://web.whatsapp.com/scan?code=%s" target="_blank">click here</a> to open in WhatsApp Web
+                </p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    %s
+                </p>
             </div>`,
 					template.HTMLEscapeString(generateQRCode(evt.Code)),
 					evt.Code,

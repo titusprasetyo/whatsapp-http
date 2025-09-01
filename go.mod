@@ -3,6 +3,7 @@ module whatsapp-http.mastitus.my.id
 go 1.24.0
 
 require (
+	github.com/mdp/qrterminal/v3 v3.2.1
 	go.mau.fi/whatsmeow v0.0.0-20250829123043-72d2ed58e998
 	google.golang.org/protobuf v1.36.8
 	modernc.org/sqlite v1.38.2
@@ -15,7 +16,6 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mdp/qrterminal/v3 v3.2.1 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/petermattis/goid v0.0.0-20250813065127-a731cc31b4fe // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
